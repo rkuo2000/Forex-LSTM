@@ -28,7 +28,7 @@ forward_150Days_Sell = 17
 forward_180Days_Sell = 18
 
 # Configuration
-epochs    = 2500
+epochs    = 5000
 batch_size= 32
 datapath  = 'data/'
 currency1 = 'USD'
@@ -114,8 +114,8 @@ import tensorflow as tf
 
 # Initialising the RNN
 # Creating an object of Sequential class to create the RNN.
-NUM_NEURONS_FirstLayer = 56
-NUM_NEURONS_SecondLayer = 56
+NUM_NEURONS_FirstLayer = 50
+NUM_NEURONS_SecondLayer = 100
 
 model = Sequential()
 

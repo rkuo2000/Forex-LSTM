@@ -10,31 +10,17 @@ import pandas as pd
 # column in dataset
 cashbuy   = 1
 spotbuy   = 2
-forward_10Days_Buy = 3
-forward_30Days_Buy = 4
-forward_60Days_Buy = 5
-forward_90Days_Buy = 6
-forward_120Days_Buy = 7
-forward_150Days_Buy = 8
-forward_180Days_Buy = 9
 cashsell  = 10
 spotsell  = 11
-forward_10Days_Sell = 12
-forward_30Days_Sell = 13
-forward_60Days_Sell = 14
-forward_90Days_Sell = 15
-forward_120Days_Sell = 16
-forward_150Days_Sell = 17
-forward_180Days_Sell = 18
 
 # Configuration
-epochs    = 2500
+epochs    = 5000
 batch_size= 32
 datapath  = 'data/'
 currency1 = 'USD'
 currency2 = 'NTD'
 op        = spotbuy
-predict_length=5
+predict_length=10
 
 # Importing the training set
 forex_prices = [[0]]
@@ -46,7 +32,7 @@ for month in months:
 	dataset = pd.read_csv(datapath+filename+".csv")
 	forex_tmp = dataset.iloc[:,op:(op+1)].values
 	forex_prices = np.append(forex_prices, forex_tmp, axis=0)
-
+	
 year='2019'
 months = ['01', '02', '03']	
 for month in months:
@@ -72,8 +58,7 @@ train_size = int(len(forex_prices)*0.8)
 test_size  = len(forex_prices)-train_size
 train = forex_prices[:train_size]
 test  = forex_prices[train_size:]
-print('train size :',len(train))
-print('test  size :',len(test))
+print(len(train), len(test))
 
 # Convert an array of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
@@ -93,7 +78,7 @@ trainX = np.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
 testX  = np.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
 
 #-----------------------------------------------
-# Part 2 - Build Model
+# Part 2 - Load Model
 #-----------------------------------------------
 # Importing the Keras libraries and packages
 from subprocess import check_output
@@ -101,6 +86,7 @@ from keras.layers.core import Dense, Activation, Dropout
 from keras.layers.recurrent import LSTM
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
+from keras.models import model_from_json
 
 import time
 import matplotlib.pyplot as plt
@@ -112,45 +98,23 @@ import tensorflow as tf
 #sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 #tf.keras.backend.set_session(sess)
 
-# Initialising the RNN
-# Creating an object of Sequential class to create the RNN.
-NUM_NEURONS_FirstLayer = 56
-NUM_NEURONS_SecondLayer = 56
-
-model = Sequential()
-
-model.add(LSTM(units = NUM_NEURONS_FirstLayer, activation = 'sigmoid', input_shape = (None, 1), return_sequences=True))
-model.add(Dropout(0.2))
-
-model.add(LSTM(units = NUM_NEURONS_SecondLayer, activation = 'sigmoid', input_shape = (None, 1), return_sequences=False))
-model.add(Dropout(0.2))
-
-model.add(Dense(units=1, activation='linear'))
+# load json and create model
+json_file = open("model.json", "r")
+model_json = json_file.read()
+json_file.close()
+model = model_from_json(model_json)
+# load weights into new model
+model.load_weights("model.h5")
+print("loaded model from disk")
 
 start = time.time()
-
 model.compile(loss='mse', optimizer='rmsprop')
-#model.compile(loss='mse', optimizer='adam')
-
 print('compilation time: ', time.time()-start)
-
-# Fitting the RNN to the Training set
-# Number of epochs increased for better convergence.
-model.fit(trainX, trainY, batch_size = batch_size, epochs = epochs, validation_split=0.05)
-
-### Save model
-# serialize model to JSON
-model_json = model.to_json()
-with open("model.json", "w") as json_file:
-	json_file.write(model_json)
-# serialize weights to HDF5
-model.save_weights("model.h5")
-print("Saved model to disk")
 
 #-------------------------------------------------------------
 # Part 3 - Making the predictions and visualising the results
 #-------------------------------------------------------------
-def plot_results_multiple(predicted_data, true_data, length):
+def plot_results_multiple(predicted_data, true_data,length):
 	plt.plot(scaler.inverse_transform(true_data.reshape(-1, 1)), color='blue', label='Real Prices')
 	plt.plot(scaler.inverse_transform(np.array(predicted_data).reshape(-1, 1)), color='red', label='Predicted Prices')
 	plt.show()

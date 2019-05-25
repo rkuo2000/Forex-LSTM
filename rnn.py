@@ -62,9 +62,10 @@ from keras.layers import Dense
 from keras.layers import LSTM
 import tensorflow as tf
 
-# for GPU memory allocation
-#gpu_options = tf.GPUOptions(allow_growth=True)
-#sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+### for GPU
+#config = tf.ConfigProto(allow_soft_placement=True)
+#config.gpu_options.allow_growth = True
+#sess = tf.Session(config=config)
 #tf.keras.backend.set_session(sess)
 
 # Initialising the RNN

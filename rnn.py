@@ -1,13 +1,19 @@
-# Forex using Recurrent Neural Network
-
-#-----------------------------------------------
-# Part 1 - Data Preprocessing
-#----------------------------------------------- 
+### Forex using Recurrent Neural Network
 # Importing the libraries
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import tensorflow as tf
+import tensorflow.keras as keras
+from sklearn.preprocessing import MinMaxScaler
+### for GPU
+#config = tf.ConfigProto(allow_soft_placement=True)
+#config.gpu_options.allow_growth = True
+#sess = tf.Session(config=config)
+#tf.keras.backend.set_session(sess)
+#-----------------------------------------------
+# Part 1 - Data Preprocessing
+#----------------------------------------------- 
 # column in dataset
 cashbuy   = 1
 spotbuy   = 2
@@ -41,7 +47,6 @@ print(training_len)
 # Will use Normalisation as the Scaling function.
 # Default range for MinMaxScaler is 0 to 1, which is what we want. So no arguments in it.
  # Will fit the training set to it and get it scaled and replace the original set.
-from sklearn.preprocessing import MinMaxScaler
 sc = MinMaxScaler()
 training_set = sc.fit_transform(training_set)
 
@@ -56,38 +61,25 @@ X_train = np.reshape(X_train, ((training_len-1), 1, 1))
 #-----------------------------------------------
 # Part 2 - Building the RNN
 #-----------------------------------------------
-# Importing the Keras libraries and packages
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-import tensorflow as tf
-
-### for GPU
-#config = tf.ConfigProto(allow_soft_placement=True)
-#config.gpu_options.allow_growth = True
-#sess = tf.Session(config=config)
-#tf.keras.backend.set_session(sess)
-
 # Initialising the RNN
 # Creating an object of Sequential class to create the RNN.
-regressor = Sequential()
+model = tf.keras.models.Sequential()
 
 # Adding the input layer and the LSTM layer
 # 4 memory units, sigmoid activation function and (None time interval with 1 attribute as input)
-regressor.add(LSTM(units = 4, activation = 'sigmoid', input_shape = (None, 1)))
+model.add(keras.layers.LSTM(units = 4, activation = 'sigmoid', input_shape = (None, 1)))
 
 # Adding the output layer
 # 1 neuron in the output layer for 1 dimensional output
-regressor.add(Dense(units = 1))
+model.add(keras.layers.Dense(units = 1))
 
-# Compiling the RNN
 # Compiling all the layers together.
 # Loss helps in manipulation of weights in NN. 
-regressor.compile(optimizer = 'adam', loss = 'mean_squared_error')
+model.compile(optimizer = 'adam', loss = 'mean_squared_error')
 
 # Fitting the RNN to the Training set
 # Number of epochs increased for better convergence.
-regressor.fit(X_train, y_train, batch_size = 32, epochs = epochs)
+model.fit(X_train, y_train, batch_size = 32, epochs = epochs)
 
 #-------------------------------------------------------------
 # Part 3 - Making the predictions and visualising the results
@@ -104,7 +96,7 @@ real_forex_price = training_set
 inputs = real_forex_price
 inputs = sc.transform(inputs)
 inputs = np.reshape(inputs, (len(real_forex_price), 1, 1))
-predicted_forex_price = regressor.predict(inputs)
+predicted_forex_price = model.predict(inputs)
 predicted_forex_price = sc.inverse_transform(predicted_forex_price)
 
 # Visualising the results
